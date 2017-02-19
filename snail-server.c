@@ -21,10 +21,10 @@
 const char* POINT =".";
 const char* DOUBLE_POINT ="..";
 
-const  char *header200 = "HTTP/1.0 200 OK\nServer: snail Http Server\nContent-Type: %s\ncontent-length: %d \n\n";
-const char *header400 = "HTTP/1.0 400 Bad Request\nServer: daloji server\nContent-Type: %s\n\n";
-const char *header404 = "HTTP/1.0 404 Not Found\nServer: daloji server\nContent-Type: %s\n\n";
-const char *header500 = "HTTP/1.0 500 Internal server error\nServer: daloji server\n\n";
+const  char *header200 = "HTTP/1.0 200 OK\nServer: Snail Http Server 1.0 \nContent-Type: %s\ncontent-length: %d \n\n";
+const char *header400 = "HTTP/1.0 400 Bad Request\nServer: Snail Http Server 1.0\nContent-Type: %s\n\n";
+const char *header404 = "HTTP/1.0 404 Not Found\nServer: Snail Http Server 1.0\nContent-Type: %s\n\n";
+const char *header500 = "HTTP/1.0 500 Internal server error\nServer:Snail Http Server 1.0\n\n";
 
 FILE *FILELOG = NULL;
 //structure reponse HTTP
@@ -53,44 +53,6 @@ typedef struct{
 
 
 
-/**
- * \fn unsigned char* binaryFileToString(FILE *fp)
- * \brief   recupere  le contenu d'un fichier binaire en lecture
- * \details   la fonction lit le fichier en entrée et renvoie le contenu binaire 
- *   
- * \param  FILE   *fp pointeur de fichier.
- * \return  renvoi le contenu binaire du fichier sinon NULL en cas de probleme
- */
-unsigned char* binaryFileToString(FILE *fp){
-   unsigned char* buffer = NULL;
-   int string_size, read_size;
-    if(fp==NULL){
-      return NULL;
-    }
-    
-    fseek(fp, 0, SEEK_END);
-    string_size = ftell(fp);
-    rewind(fp);
-    buffer = (unsigned char*) malloc(sizeof(char) * (string_size + 1) );
-    read_size = fread(buffer, sizeof(char), string_size, fp);
-    if (string_size != read_size){
-      free(buffer);
-      return NULL;
-    }
-    fclose(fp);
-    return buffer;
-}
-
-
-char* readFontFile(const char* filename){
-   if(filename == NULL){
-      fprintf(stderr,"cannot open NULL file  line %d at %s \n",__LINE__,__FILE__);
-      exit(-1); 
-   }
-   FILE *fp;
-   fp = fopen(filename, "rb");
-   return binaryFileToString(fp);
-}
 
 /**
  * \fn const char* get_filename_ext(const char *filename)
