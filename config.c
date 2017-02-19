@@ -99,6 +99,8 @@ t_config * readconfig(char *filename){
 	      value = strstr((char *)tmp,DELIM);
 	      value = value + strlen(DELIM);
 	      config->port = atoi(value);
+	  }else{
+	      config->port =-1;
 	  }
 	}
 	

@@ -360,25 +360,29 @@ char *getMessage(int fd) {
 char * getFileName(char* directory,char* header){
       if(directory == NULL){
 	fprintf(stderr, "repertoire racine NULL\n");
-	  exit(EXIT_FAILURE);
+	logger(FATAL,"repertoire racine NULL \n");
+	return NULL;
       }
       if(header == NULL){
-	fprintf(stderr, "header value NULL\n");
-	  exit(EXIT_FAILURE);
+	fprintf(stderr, "header de la requete NULL\n");
+	logger(FATAL,"header de la requete NULL \n");
+	return NULL;
       }
   
-      char * file;
+      char * file = NULL;
       // Allocate some memory for the filename and check it went OK
       if( (file = malloc(sizeof(char) * strlen(header))) == NULL){
-	  fprintf(stderr, "Error allocating memory to file in getFileName()\n");
+	  fprintf(stderr, "Erreur lors de l'allocation memoire  getFileName()\n");
+	  logger(FATAL,"Erreur lors de l'allocation memoire  getFileName() \n");
 	  exit(EXIT_FAILURE);
       }
 
       sscanf(header, "GET %s HTTP/1.1", file);
   
-      char *base;
+      char *base = NULL;
       if( (base = malloc(sizeof(char) * (strlen(file) + strlen(directory)+1))) == NULL){
-	  fprintf(stderr, "Error allocating memory to base in getFileName()\n");
+	  fprintf(stderr, "Erreur lors de l'allocation memoire  getFileName()\n");
+	  logger(FATAL,"Erreur lors de l'allocation memoire  getFileName() \n");
 	  exit(EXIT_FAILURE);
       }
 
@@ -397,16 +401,18 @@ char * getFileName(char* directory,char* header){
 void  *processRequest(void *argument){
   t_argumentThread *arg = (t_argumentThread *)argument;
   if(arg->wwwDirectory == NULL){
-      exit(-1);
+    fprintf(stderr, "pointeur de fonction thread repetoire de travail non defini\n");
+    logger(FATAL,"pointeur de fonction thread repetoire de travail non defini \n");
+    exit(EXIT_FAILURE); 
   }
   while(1){
    //printListFile(list);
     int listend = arg->socketFd;
     int con = accept(listend, (struct sockaddr*)NULL, NULL); 
     char * header = getMessage(con);
+    logger(INFO,header);
     t_httpResponse *httpresponse=NULL;
     t_httpRequest *httpreq=NULL;
-    //printf("%s  \n",header);
     char responseHeader[MAX_BUFFER];
     char *content = NULL;
     char *filename = getFileName(arg->wwwDirectory,header);
@@ -423,7 +429,6 @@ void  *processRequest(void *argument){
     if(httpreq != NULL && content !=NULL){
       if(httpreq->encoding != NULL){
 	  sprintf(responseHeader, header200,httpreq->encoding,strlen(content));
-	 // printf(":===> %s \n",responseHeader);
       }
     }
     if(content !=NULL && httpreq != NULL){
@@ -444,24 +449,28 @@ int main(int argc, char *argv[]){
       int listenfd = 0, connfd = 0 ,i = 0,pid;
       struct sockaddr_in serv_addr; 
       char sendBuff[1025];
-      
-      
+            
       t_config *config= readconfig("server.conf");
-      if(config ==NULL){
+      if(config == NULL){
+	 logger(FATAL,"erreur lors de la lecture de la configuration\n");
 	exit(-1);
       }
+      if(config->port<0){
+	logger(FATAL,"port server non defini\n");
+	exit(-1);
+      }
+      
       if(FILELOG == NULL){
 	FILELOG = fopen(config->filelog, "w");
       }
-     
-	
+     	
       listenfd = socket(AF_INET, SOCK_STREAM, 0);
       memset(&serv_addr, '0', sizeof(serv_addr));
       memset(sendBuff, '0', sizeof(sendBuff)); 
 
       serv_addr.sin_family = AF_INET;
       serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-      serv_addr.sin_port = htons(8080); 
+      serv_addr.sin_port = htons(config->port); 
 
       bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
 
