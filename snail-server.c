@@ -269,6 +269,17 @@ t_httpRequest * getTypeRequest(const char* filename){
   return req; 
   }
 
+  
+/**
+ * \fn int sendBinaryFileSocket(int sock,const  t_httpRequest *httpreq)
+ * \brief    envoi de la reponse de la requete vers la socket 
+ * \details   fonction utilisé pour l'envoi de la reponse d'une requete (utilisé pour les
+ * 	fichier binaire (img,mp3,avi,font, ......)
+ * 
+ * \param  int sock socket  
+ * \param  t_httpRequest  *httpreq requete client (cf #t_httpRequest) 
+ * \return 
+ */
 int sendBinaryFileSocket(int sock,const  t_httpRequest *httpreq){
   char responseHeader[MAX_BUFFER];
   

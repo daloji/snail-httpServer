@@ -4,11 +4,6 @@
 #ifndef _THPOOL_
 #define _THPOOL_
 
-
-#define MAX_PROCESS 2
-#define MAX_THREADS 10
-#define MAX_QUEUE 65536
-
 typedef struct taskThread t_taskThread;
 
 typedef struct processFunction t_processFunction;

@@ -5,8 +5,13 @@
 #define MAXBUF 1024 
 #include "config.h"
 
-//FILE *FILELOG;
-
+/**
+ * \fn logger(typelog tag,const char* message)
+ * \brief    logger (INFO,SEVERE,FATAL,DEBUG,WARNING)  
+ * \details  logger utilisé pour le messages d'information venant du server
+ * \param  typelog tag (cf #typelog) niveau de sévérité du message thread_count nombre de thread a crée dans le pool 
+ * \param  const char* message  message d'information
+ */
 void logger(typelog tag,const char* message){
    char buff[100];
    const char* level =NULL;
@@ -17,12 +22,18 @@ void logger(typelog tag,const char* message){
    if(FILELOG != NULL){
       printf("[%s] %s ; %s \n ",tagToString(tag),buff,message);
       fprintf(FILELOG, "[%s] %s ; %s",tagToString(tag),buff,message);
-      //fprintf(FILELOG,"[%s] %s ; %s \n ",tagToString(tag),buff,message);
-     // fwrite("rrr" , 1 , 3 , FILELOG );
-      //fclose(FILELOG);
+       //fclose(FILELOG);
    }
 }
 
+/**
+ * \fn const char* tagToString(typelog tag)
+ * \brief    renvoi la chaine de caractere correspondant a l'enum typelog (cf #typelog))  
+ * \details  logger utilisé pour le messages d'information venant du server
+ * \param  typelog tag (cf #typelog) niveau de sévérité 
+ * \param  const char* message  message d'information
+ * \return char *  niveau de log 
+ */
 const char* tagToString(typelog tag){
 	char *level = NULL;
 	 switch (tag){
