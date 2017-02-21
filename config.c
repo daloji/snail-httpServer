@@ -117,17 +117,14 @@ t_config * readconfig(char *filename){
 	  
 	  if(strstr(buffer, "PORT")){
 		config->port =  read_int_config(buffer);
-		printf("%d",config->port);
       }
 	  
 	  if(strstr(buffer, "NBPROCESS")){
 		config->maxProcess =  read_int_config(buffer);
-		printf("%d",config->maxProcess);
       }
 	  
 	  if(strstr(buffer, "NBTHREAD")){
 		config->maxThread =  read_int_config(buffer);
-		printf("%d",config->maxThread);
       }
 	  
 	}

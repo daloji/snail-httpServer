@@ -389,7 +389,6 @@ char * getFileName(char* directory,char* header){
     }
 
     sscanf(header, "GET %s HTTP/1.1", file);
-  	printf("FILE %s \n",file);
     char *base = NULL;
     if( (base = malloc(sizeof(char) * (strlen(file) + strlen(directory)+1))) == NULL){
 	  fprintf(stderr, "Erreur lors de l'allocation memoire  getFileName()\n");
@@ -428,8 +427,6 @@ void  *processRequest(void *argument){
     char responseHeader[MAX_BUFFER];
     char *content = NULL;
     char *filename = getFileName(arg->wwwDirectory,header);
-	
-	
 	
     if(filename != NULL){
 	httpreq = getTypeRequest(filename);
