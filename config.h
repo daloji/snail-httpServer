@@ -18,12 +18,20 @@ typedef struct fileRequest t_fileRequest;
 
 typedef struct extension t_extension;
 
+/**
+ *  \brief Structure representant la configuration du serveur
+ *  \details la structure est valorisée par la fonction de lecture de la configuration
+ */
 struct config{
-   char *wwwDirectory;
-   char *filelog;
-   int port;
-   int maxThread;
-   int maxProcess;
+   char *wwwDirectory; /*!< repertoire de travail qui contient les sources de votre site web (ex : index.html)*/ 
+   
+   char *filelog; /*!< fichier de log du serveur*/ 
+   
+   int port; /*!< port d'ecoute du serveur */ 
+   
+   int maxThread;/*!< nombre de thread  qui sont crée dans chaque processus */ 
+   
+   int maxProcess;/*!< nombre de processus crée par fork() */ 
 };
 
 struct fileRequest{
@@ -32,9 +40,15 @@ struct fileRequest{
     int sizeFile;
 };
 
+
+/**
+ *  \brief Structure representant  la liste des mimes types gerer par le serveur
+ *  \details la liste des structure est statique
+ */
 struct extension{
-   char *ext;
-   char *filetype;
+   char *ext; /*!< type extension */ 
+   
+   char *filetype;/*!< mime type */ 
 };
 
 typedef enum {

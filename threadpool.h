@@ -12,19 +12,31 @@ typedef struct threadPool t_threadPool;
 
 typedef struct argumentThread t_argumentThread;
 
-
+/**
+ *  \brief Structure representant l'argument du pointeur de fonction 
+ *  \details argument envoyé dans chaque  pointeur de fonction d'un thread
+ */
 struct argumentThread{
-  int poolId;
-  int socketFd;
-  char *threadname;
-  char *wwwDirectory;
+  int poolId;  /*!< identifiant du Thread)*/
+  
+  int socketFd; /*!< socket utilisé par le Thread)*/
+  
+  char *threadname; /*!< nom du  Thread)*/
+  
+  char *wwwDirectory; /*!< une espace de travaille (ex: /var/www/) contenant les sources de votres site web utilisé par le Thread)*/
 };
 
-
+/**
+ *  \brief Structure representant  une liste chainée representant la liste des Threads a lancée 
+ *  \details cette liste chainée est utilisée directement par le PoolThread
+ */
 struct taskThread{
-  char * nameThead;
-  pthread_t thread;
-  t_processFunction *executeFunction;
+  char * nameThead; /*!< nom du  Thread)*/
+  
+  pthread_t thread; /*!< instance du  Thread)*/
+  
+  t_processFunction *executeFunction; /*!< ponteur de fonction (fonction a executé par le Thread)*/
+  
   int poolId;
   int threadId;
   int state;

@@ -20,7 +20,7 @@ void logger(typelog tag,const char* message){
    strftime (buff, 100, "%d/%m/%Y %H:%M:%S", localtime (&now));
    FILE *FILELOG = fopen("test", "w");
    if(FILELOG != NULL){
-      printf("[%s] %s ; %s \n ",tagToString(tag),buff,message);
+      //printf("[%s] %s ; %s \n ",tagToString(tag),buff,message);
       fprintf(FILELOG, "[%s] %s ; %s",tagToString(tag),buff,message);
        //fclose(FILELOG);
    }
@@ -51,6 +51,27 @@ const char* tagToString(typelog tag){
 }
 
 
+
+ 
+
+int read_int_config(char* config_line) {    
+    char prm_name[MAXBUF];
+    int val;
+    sscanf(config_line, "%s %d\n", prm_name, &val);
+    return val;
+}
+
+char* read_str_from_config_line(char* config_line) {  
+	char *val = NULL;
+	char prm_name[MAXBUF];
+	if(config_line != NULL){
+		val =(char*) malloc(sizeof(char)*strlen(config_line)+1);
+		sscanf(config_line, "%s %s\n", prm_name, val);
+	}  
+	return val;
+}
+
+
 /**
  * \fn t_config * readconfig(char *filename)
  * \brief  lecture du fichier de configuration donnée en entrée
@@ -62,88 +83,55 @@ const char* tagToString(typelog tag){
  * \return  renvoi la structure  t_config (cf #t_config) en cas d'echec erreur de demarrage du serveur
  */
 t_config * readconfig(char *filename){
-  
-  if(filename == NULL){
+	FILE *fp = NULL;
+    char buffer[MAXBUF];
+
+	if(filename == NULL){
      fprintf(stderr, "fichier de configuration non trouvé\n");
      exit(EXIT_FAILURE);
-  }
-  
-  t_config *config = (t_config*)malloc(sizeof(t_config));
-  if(config == NULL){
-     fprintf(stderr, "Echec de la creation variable config -> allocation memoire impossible\n");
-     exit(EXIT_FAILURE);
-  }
-  FILE *file = fopen (filename, "r");
-  if (file != NULL){ 
-     char line[MAXBUF];
-     char *tmp;
-     while(fgets(line, sizeof(line), file) != NULL){
-	char *key;
-	char *value;
-	tmp = (char*) malloc(sizeof(char)*strlen(line)+1);
-	memcpy(tmp,line,strlen(line)+1);
-        key = strtok((char *)line,DELIM);
-	if(strcmp(DIRECTORY,key)==0){
-	   value = strstr((char *)tmp,DELIM);
-	   if(value != NULL){
-	      value = strtok(value, "\n");
-	      value = value + strlen(DELIM);
-	      config->wwwDirectory = (char*)malloc(sizeof(char)*strlen(value)+1);
-	      memcpy(config->wwwDirectory,value,strlen(value)+1);
-	   }
 	}
-	
-	if(strcmp(LOGFILE,key)==0){
-	   value = strstr((char *)tmp,DELIM);
-	   if(value != NULL){
-	      value = strtok(value, "\n");
-	      value = value + strlen(DELIM);
-	      config->filelog = (char*)malloc(sizeof(char)*strlen(value)+1);
-	      memcpy(config->filelog,value,strlen(value)+1);
-	   }
+    
+	if ((fp=fopen(filename, "r")) == NULL) {
+        fprintf(stderr, "Failed to open config file %s", filename);
+        exit(EXIT_FAILURE);
+    }
+	t_config *config = (t_config*)malloc(sizeof(t_config));
+	while(! feof(fp)) {
+	  fgets(buffer, MAXBUF, fp);
+	  if(buffer[0] == '#' || strlen(buffer) < 4) {
+            continue;
+      }
+	  if(strstr(buffer, "DIRECTORY")){
+		char *tmp =  read_str_from_config_line(buffer);
+		config->wwwDirectory = (char*)malloc(sizeof(char)*strlen(tmp)+1);
+		memcpy(config->wwwDirectory,tmp,strlen(tmp)+1);
+		free(tmp);
+      }
+	  
+	  if(strstr(buffer, "LOGFILE")){
+		char *tmp =  read_str_from_config_line(buffer);
+		config->filelog = (char*)malloc(sizeof(char)*strlen(tmp)+1);
+		memcpy(config->filelog,tmp,strlen(tmp)+1);
+		free(tmp);
+      }
+	  
+	  if(strstr(buffer, "PORT")){
+		config->port =  read_int_config(buffer);
+		printf("%d",config->port);
+      }
+	  
+	  if(strstr(buffer, "NBPROCESS")){
+		config->maxProcess =  read_int_config(buffer);
+		printf("%d",config->maxProcess);
+      }
+	  
+	  if(strstr(buffer, "NBTHREAD")){
+		config->maxThread =  read_int_config(buffer);
+		printf("%d",config->maxThread);
+      }
+	  
 	}
+	fclose(fp);
 	
-	if(strcmp(PORT,key)==0){
-	  value = strstr((char *)tmp,DELIM);
-	  if(value != NULL){
-	      value = strtok(value, "\n");
-	      value = strstr((char *)tmp,DELIM);
-	      value = value + strlen(DELIM);
-	      config->port = atoi(value);
-	  }else{
-	      config->port =-1;
-	  }
-	}
-	
-	if(strcmp(NBPROCESS,key)==0){
-	  value = strstr((char *)tmp,DELIM);
-	  if(value != NULL){
-	      value = strtok(value, "\n");
-	      value = strstr((char *)tmp,DELIM);
-	      value = value + strlen(DELIM);
-	      config->maxProcess = atoi(value);
-	  }
-	}
-	
-	if(strcmp(NBTHREAD,key)==0){
-	  value = strstr((char *)tmp,DELIM);
-	  if(value != NULL){
-	     value = strtok(value, "\n");
-	      value = strstr((char *)tmp,DELIM);
-	      value = value + strlen(DELIM);
-	      config->maxThread = atoi(value);
-	  }
-	}
-	
-	 free(tmp);
-     } // End if file
-  
-    fclose(file);
-  }else{
-    logger(FATAL,"erreur lecture fichier");
-    config = NULL;
-  }             
-                
-  return config;
-
+	return config;
 }
