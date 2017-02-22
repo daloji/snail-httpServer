@@ -16,7 +16,7 @@
 
 #include "threadpool.h"
 #include "config.h"
-
+#include "logger.h"
 	  
 const char* POINT =".";
 const char* DOUBLE_POINT ="..";
@@ -410,24 +410,26 @@ char * getFileName(char* directory,char* header){
  * \param  void * (t_argumentThread)  (cf #t_argumentThread) argument contient les arguments de la fonction passer par le threadr 
 */
 void  *processRequest(void *argument){
+	
   t_argumentThread *arg = (t_argumentThread *)argument;
   if(arg->wwwDirectory == NULL){
     fprintf(stderr, "pointeur de fonction thread repetoire de travail non defini\n");
-    logger(FATAL,"pointeur de fonction thread repetoire de travail non defini \n");
+   // logger(FATAL,"pointeur de fonction thread repetoire de travail non defini \n");
     exit(EXIT_FAILURE); 
   }
   while(1){
    //printListFile(list);
     int listend = arg->socketFd;
     int con = accept(listend, (struct sockaddr*)NULL, NULL); 
+
     char * header = getMessage(con);
-    logger(INFO,header);
+	logger(INFO,"test");
     t_httpResponse *httpresponse=NULL;
     t_httpRequest *httpreq=NULL;
     char responseHeader[MAX_BUFFER];
     char *content = NULL;
     char *filename = getFileName(arg->wwwDirectory,header);
-	
+	printf("%s",filename);
     if(filename != NULL){
 	httpreq = getTypeRequest(filename);
 	if(httpreq != NULL && httpreq->filename != NULL){
@@ -461,7 +463,8 @@ int main(int argc, char *argv[]){
     int listenfd = 0, connfd = 0 ,i = 0,pid;
     struct sockaddr_in serv_addr; 
     char sendBuff[1025];
-            
+    
+	initlogger();        
     t_config *config= readconfig("server.conf");
     if(config == NULL){
 		logger(FATAL,"erreur lors de la lecture de la configuration\n");
@@ -471,11 +474,11 @@ int main(int argc, char *argv[]){
 		logger(FATAL,"port server non defini\n");
 		exit(-1);
     }
-      
+	
     if(FILELOG == NULL){
 		FILELOG = fopen(config->filelog, "w");
     }
-     	
+	
       listenfd = socket(AF_INET, SOCK_STREAM, 0);
       memset(&serv_addr, '0', sizeof(serv_addr));
       memset(sendBuff, '0', sizeof(sendBuff)); 
@@ -487,7 +490,7 @@ int main(int argc, char *argv[]){
       bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
 
       listen(listenfd, 10); 
-
+	 
       t_argumentThread *argument = (t_argumentThread *) malloc(sizeof(t_argumentThread));
       if(argument == NULL){
 	  fprintf(stderr, "Echec de la creation argument thread -> allocation memoire impossible\n");
@@ -498,13 +501,15 @@ int main(int argc, char *argv[]){
       argument->socketFd=listenfd;
       
       if(config->wwwDirectory ==NULL){
-	logger(FATAL,"repertoire source non configuré dans le fichier de configuration\n");
-	exit(-1);
+		logger(FATAL,"repertoire source non configuré dans le fichier de configuration\n");
+		exit(-1);
       }
+	  
       argument->wwwDirectory=config->wwwDirectory;
-      
+
       for(i=0;i<config->maxProcess;i++){
-	//prefork mode     
+	
+	 //prefork mode     
 	  pid=fork();
 	  if (pid == -1){
 	    fprintf(stderr, "echec lors de l'appel a fork\n");
@@ -519,11 +524,11 @@ int main(int argc, char *argv[]){
 		  logger(FATAL,"echec fatal waitpid \n");
 		  break;
 	      }
-	  }
+	  } 
       }
 
       pthread_exit(NULL);
       waitpid(WAIT_ANY, NULL, WNOHANG);
       exit(1);
-      
+     
   }

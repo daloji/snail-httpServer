@@ -21,7 +21,6 @@
  */
 t_threadPool* createThreadPool(int thread_count,void (*function)(void *),void *argument){
   int i;
-  t_threadPool* pt =NULL;
   t_taskThread *pts =NULL;
   t_threadPool *pool = (t_threadPool*) malloc(sizeof(t_threadPool));
   t_argumentThread* ag = (t_argumentThread *)argument;
