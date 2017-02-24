@@ -51,18 +51,11 @@ struct extension{
    char *filetype;/*!< mime type */ 
 };
 
-typedef enum {
-	INFO,
-	DEBUG,
-	SEVERE,
-	FATAL
-}typelog;
+
 
 t_config * readconfig(char *filename);
 
-void logger(typelog tag, const char* message);
 
-const char* tagToString(typelog tag);
 
 
 FILE *FILELOG;

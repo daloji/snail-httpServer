@@ -9,20 +9,20 @@ typedef enum {
 	FATAL
 }typelog;
 
-struct logItem{
-	typelog level; /*!< niveau de log */ 
-	
-	char *message;/*!< message de log */ 
-
-};
 
 typedef struct logItem t_logItem;
+
+struct logItem{
+	char *message;/*!< message de log */ 
+	t_logItem * next;
+};
+
+
 
 
 struct queingLog{
   t_logItem *front;
   t_logItem *rear;
-  t_logItem *queue;
   int size;
 };
 
@@ -32,13 +32,13 @@ struct queingLog{
 typedef struct queingLog t_queingLog;
 
 
-
-
-t_queingLog *quelog;
+t_queingLog *QUEUELOG;
  
-void queingLog();
+t_logItem* createQueueLog(const char* message);
+ 
+void queingLog(t_logItem *log);
 
-void dequeingLog();
+char* dequeingLog();
 
 void initlogger();
 

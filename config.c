@@ -5,61 +5,13 @@
 #define MAXBUF 1024 
 #include "config.h"
 
-/**
- * \fn logger(typelog tag,const char* message)
- * \brief    logger (INFO,SEVERE,FATAL,DEBUG,WARNING)  
- * \details  logger utilisé pour le messages d'information venant du server
- * \param  typelog tag (cf #typelog) niveau de sévérité du message thread_count nombre de thread a crée dans le pool 
- * \param  const char* message  message d'information
- */
-void logger(typelog tag,const char* message){
-   char buff[100];
-   const char* level =NULL;
-   time_t now;
-   time(&now); 
-   strftime (buff, 100, "%d/%m/%Y %H:%M:%S", localtime (&now));
-   FILE *FILELOG = fopen("test", "w");
-   if(FILELOG != NULL){
-      //printf("[%s] %s ; %s \n ",tagToString(tag),buff,message);
-      fprintf(FILELOG, "[%s] %s ; %s",tagToString(tag),buff,message);
-       //fclose(FILELOG);
-   }
-}
-
-/**
- * \fn const char* tagToString(typelog tag)
- * \brief    renvoi la chaine de caractere correspondant a l'enum typelog (cf #typelog))  
- * \details  logger utilisé pour le messages d'information venant du server
- * \param  typelog tag (cf #typelog) niveau de sévérité 
- * \param  const char* message  message d'information
- * \return char *  niveau de log 
- */
-const char* tagToString(typelog tag){
-	char *level = NULL;
-	 switch (tag){
-		case INFO:level = "INFO";
-				break;
-		case DEBUG:level ="DEBUG";
-				break;
-		case SEVERE:level = "SEVERE";
-				break;
-		case FATAL:level = "FATAL";
-				break;
-		default: level = " ";
-	 }
-	 return level;
-}
-
-
-
- 
-
 int read_int_config(char* config_line) {    
     char prm_name[MAXBUF];
     int val;
     sscanf(config_line, "%s %d\n", prm_name, &val);
     return val;
 }
+
 
 char* read_str_from_config_line(char* config_line) {  
 	char *val = NULL;
@@ -117,14 +69,17 @@ t_config * readconfig(char *filename){
 	  
 	  if(strstr(buffer, "PORT")){
 		config->port =  read_int_config(buffer);
+		printf("%d",config->port);
       }
 	  
 	  if(strstr(buffer, "NBPROCESS")){
 		config->maxProcess =  read_int_config(buffer);
+		printf("%d",config->maxProcess);
       }
 	  
 	  if(strstr(buffer, "NBTHREAD")){
 		config->maxThread =  read_int_config(buffer);
+		printf("%d",config->maxThread);
       }
 	  
 	}

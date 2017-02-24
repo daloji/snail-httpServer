@@ -414,7 +414,7 @@ void  *processRequest(void *argument){
   t_argumentThread *arg = (t_argumentThread *)argument;
   if(arg->wwwDirectory == NULL){
     fprintf(stderr, "pointeur de fonction thread repetoire de travail non defini\n");
-   // logger(FATAL,"pointeur de fonction thread repetoire de travail non defini \n");
+    logger(FATAL,"pointeur de fonction thread repetoire de travail non defini \n");
     exit(EXIT_FAILURE); 
   }
   while(1){
@@ -423,13 +423,11 @@ void  *processRequest(void *argument){
     int con = accept(listend, (struct sockaddr*)NULL, NULL); 
 
     char * header = getMessage(con);
-	logger(INFO,"test");
     t_httpResponse *httpresponse=NULL;
     t_httpRequest *httpreq=NULL;
     char responseHeader[MAX_BUFFER];
     char *content = NULL;
     char *filename = getFileName(arg->wwwDirectory,header);
-	printf("%s",filename);
     if(filename != NULL){
 	httpreq = getTypeRequest(filename);
 	if(httpreq != NULL && httpreq->filename != NULL){
