@@ -2,6 +2,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "logger.h"
 #include "threadpool.h"
 
 #include <pthread.h>
@@ -84,10 +85,44 @@ t_threadPool* createThreadPool(int thread_count,void (*function)(void *),void *a
     pts = taskthread;
      
   }
- 
-  pool->listthread = pts;
-  pool->poolsize = thread_count;
+  
+   pool->listthread = pts;
+   pool->poolsize = thread_count;
 
   return pool;
  
+}
+
+/**
+ * \brief    suppression du pool de thread 
+ * \details   arret de tous les threads et liberation de l'espace memoire utilisée
+ * 
+ * \param  t_threadPool (cf #t_threadPool)  pool de thread a supprimé
+ */
+void releaseThreadPool(t_threadPool*  threadpool){
+		t_taskThread *pt = threadpool->listthread;
+		while(pt != NULL){
+			if(pt->nameThead != NULL){
+				free(pt->nameThead);
+			}
+			if(pt->thread != NULL){
+				pthread_cancel(pt->thread);
+			}
+			if(pt->executeFunction != NULL){
+				if(pt->executeFunction->argument != NULL){
+					t_argumentThread *arg = pt->executeFunction->argument;
+					if(arg->threadname){
+						free(arg->threadname);
+					}
+					if(arg->wwwDirectory){
+						free(arg->wwwDirectory);
+					}	
+					free(pt->executeFunction->argument);
+				}
+				free(pt->executeFunction);
+			}		
+			pt=pt->next;			
+		}
+		
+		free(threadpool);
 }

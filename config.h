@@ -27,7 +27,11 @@ struct config{
    
    char *filelog; /*!< fichier de log du serveur*/ 
    
+   char *certFile;  /*!< fichier  certificat */
+   
    int port; /*!< port d'ecoute du serveur */ 
+   
+   int tls_port; /*!< port d'ecoute  du serveur  ssl */ 
    
    int maxThread;/*!< nombre de thread  qui sont crée dans chaque processus */ 
    
@@ -54,8 +58,6 @@ struct extension{
 
 
 t_config * readconfig(char *filename);
-
-
 
 
 FILE *FILELOG;

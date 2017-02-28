@@ -54,8 +54,11 @@ struct threadPool {
   int poolsize;
 };
 
+extern t_threadPool *THREADPOOL;
 
 t_threadPool*  createThreadPool(int thread_count, void (*function)(void *),void *arg);
+
+void releaseThreadPool(t_threadPool*  threadpool);
 
 int threadpool_destroy(t_threadPool  *pool);
 

@@ -2,9 +2,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 #include "logger.h"
 
-
+void  *loggMessageTofile(void *argument){
+	while(1){
+		FILE *fp = fopen("log.txt", "a+");
+		if(QUEUELOG != NULL){
+			char *message = dequeingLog();
+			while(message!= NULL){
+				fwrite(message , 1 , strlen(message) , fp );
+				free(message);
+				message = dequeingLog();
+			}
+		}		
+    fclose(fp);
+	sleep(5);
+	}
+	
+}
 
 /**
  * \fn const char* tagToString(typelog tag)

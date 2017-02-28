@@ -67,19 +67,27 @@ t_config * readconfig(char *filename){
 		free(tmp);
       }
 	  
-	  if(strstr(buffer, "PORT")){
+	  if(strstr(buffer, "CERTIFICAT")){
+		char *tmp =  read_str_from_config_line(buffer);
+		config->certFile = (char*)malloc(sizeof(char)*strlen(tmp)+1);
+		memcpy(config->certFile,tmp,strlen(tmp)+1);
+		free(tmp);
+      }
+	  
+	  if(strstr(buffer, "HTTP_PORT")){
 		config->port =  read_int_config(buffer);
-		printf("%d",config->port);
+      }
+	  
+	  if(strstr(buffer, "HTTPS_PORT")){
+		config->tls_port =  read_int_config(buffer);
       }
 	  
 	  if(strstr(buffer, "NBPROCESS")){
 		config->maxProcess =  read_int_config(buffer);
-		printf("%d",config->maxProcess);
       }
 	  
 	  if(strstr(buffer, "NBTHREAD")){
 		config->maxThread =  read_int_config(buffer);
-		printf("%d",config->maxThread);
       }
 	  
 	}
