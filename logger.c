@@ -2,24 +2,38 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h> 
 #include "logger.h"
+#define BUFFER 1024
+char* pipe_named ="/tmp/fifo";
 
 void  *loggMessageTofile(void *argument){
-	while(1){
-		FILE *fp = fopen("log.txt", "a+");
-		if(QUEUELOG != NULL){
-			char *message = dequeingLog();
-			while(message!= NULL){
-				fwrite(message , 1 , strlen(message) , fp );
-				free(message);
-				message = dequeingLog();
-			}
-		}		
-    fclose(fp);
-	sleep(5);
+	int fd ;
+	FILE *filelog = NULL;
+    char buf[BUFFER];
+	char *logfile = argument;
+	fd = open(pipe_named, O_RDONLY | O_NONBLOCK);
+	if(fd<0){
+		fprintf(stderr,"Error ouverture tube nommée! %s\n", strerror(errno));
+		exit(1);
 	}
-	
+	if(logfile != NULL){
+		while(1){
+			if(read(fd, buf, BUFFER)<0){
+				filelog = fopen(logfile, "a+");
+				if(filelog != NULL){
+					printf("%s",buf);
+					fwrite(buf,1,strlen(buf),filelog);
+					fclose(filelog);
+				}
+			}
+		 sleep(10);
+		}
+    }
 }
 
 /**
@@ -71,16 +85,37 @@ void logger(typelog tag,const char* message){
 	   if(log == NULL){
 		  fprintf(stderr, "erreur lors de l'allocation memoire\n");
 	      exit(EXIT_FAILURE);
-		}
-	   sprintf(log, "[%s] %s ; %s",level,buff,message);
-	   t_logItem* logtoqueue=createQueueLog(log);
-	   queingLog(logtoqueue);
-	   free(log);	   
+	   }
+	   sprintf(log, "[%s] %s ; %s \n",level,buff,message);
+	   char *message = (char*) malloc(BUFFER*sizeof(char));
+	   if(message == NULL){
+		  fprintf(stderr, "Erreur lors de l'allocation memoire \n");
+		  exit(EXIT_FAILURE);
+	   }
+	   strcat(message,log);
+	   int fd= open(pipe_named, O_WRONLY| O_NONBLOCK);
+	   if(fd>0){
+		  write(fd, message, strlen(message));  
+	   }
+	   if(message != NULL){
+		   free(message);
+	   }
+	   if(log != NULL){
+		   free(log);
+	   }
 	}
 }
 
+
+
+
 void initlogger(){
-	if(QUEUELOG== NULL){
+
+    mkfifo(pipe_named, 0666);   
+
+
+	//fdq = open(LOGGER_TUBE, O_RDONLY);
+	/*if(QUEUELOG== NULL){
 		QUEUELOG = (t_queingLog*)malloc(sizeof(t_queingLog));
 		if(QUEUELOG == NULL){
 		  fprintf(stderr, "erreur lors de l'allocation memoire\n");
@@ -90,7 +125,7 @@ void initlogger(){
 		QUEUELOG->rear = NULL;
 		QUEUELOG->size = 0;
 		
-	}
+	}*/
 	
 }
 
