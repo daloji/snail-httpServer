@@ -14,13 +14,13 @@ int read_int_config(char* config_line) {
 
 
 char* read_str_from_config_line(char* config_line) {  
-	char *val = NULL;
-	char prm_name[MAXBUF];
-	if(config_line != NULL){
-		val =(char*) malloc(sizeof(char)*strlen(config_line)+1);
-		sscanf(config_line, "%s %s\n", prm_name, val);
-	}  
-	return val;
+  char *val = NULL;
+  char prm_name[MAXBUF];
+  if(config_line != NULL){
+	val =(char*) malloc(sizeof(char)*strlen(config_line)+1);
+	sscanf(config_line, "%s %s\n", prm_name, val);
+  }  
+  return val;
 }
 
 
@@ -35,63 +35,62 @@ char* read_str_from_config_line(char* config_line) {
  * \return  renvoi la structure  t_config (cf #t_config) en cas d'echec erreur de demarrage du serveur
  */
 t_config * readconfig(char *filename){
-	FILE *fp = NULL;
+    FILE *fp = NULL;
     char buffer[MAXBUF];
 
-	if(filename == NULL){
-     fprintf(stderr, "fichier de configuration non trouvé\n");
-     exit(EXIT_FAILURE);
-	}
+    if(filename == NULL){
+      fprintf(stderr, "fichier de configuration non trouvé\n");
+      exit(EXIT_FAILURE);
+    }
     
-	if ((fp=fopen(filename, "r")) == NULL) {
+    if ((fp=fopen(filename, "r")) == NULL) {
         fprintf(stderr, "Failed to open config file %s", filename);
         exit(EXIT_FAILURE);
     }
-	t_config *config = (t_config*)malloc(sizeof(t_config));
-	while(! feof(fp)) {
-	  fgets(buffer, MAXBUF, fp);
-	  if(buffer[0] == '#' || strlen(buffer) < 4) {
-            continue;
+    t_config *config = (t_config*)malloc(sizeof(t_config));
+    while(! feof(fp)) {
+      fgets(buffer, MAXBUF, fp);
+      if(buffer[0] == '#' || strlen(buffer) < 4) {
+          continue;
       }
-	  if(strstr(buffer, "DIRECTORY")){
-		char *tmp =  read_str_from_config_line(buffer);
-		config->wwwDirectory = (char*)malloc(sizeof(char)*strlen(tmp)+1);
-		memcpy(config->wwwDirectory,tmp,strlen(tmp)+1);
-		free(tmp);
-      }
-	  
-	  if(strstr(buffer, "LOGFILE")){
-		char *tmp =  read_str_from_config_line(buffer);
-		config->filelog = (char*)malloc(sizeof(char)*strlen(tmp)+1);
-		memcpy(config->filelog,tmp,strlen(tmp)+1);
-		free(tmp);
+      if(strstr(buffer, "DIRECTORY")){
+	char *tmp =  read_str_from_config_line(buffer);
+	config->wwwDirectory = (char*)malloc(sizeof(char)*strlen(tmp)+1);
+	memcpy(config->wwwDirectory,tmp,strlen(tmp)+1);
+	free(tmp);
       }
 	  
-	  if(strstr(buffer, "CERTIFICAT")){
-		char *tmp =  read_str_from_config_line(buffer);
-		config->certFile = (char*)malloc(sizeof(char)*strlen(tmp)+1);
-		memcpy(config->certFile,tmp,strlen(tmp)+1);
-		free(tmp);
+      if(strstr(buffer, "LOGFILE")){
+	char *tmp =  read_str_from_config_line(buffer);
+	config->filelog = (char*)malloc(sizeof(char)*strlen(tmp)+1);
+	memcpy(config->filelog,tmp,strlen(tmp)+1);
+	free(tmp);
       }
 	  
-	  if(strstr(buffer, "HTTP_PORT")){
-		config->port =  read_int_config(buffer);
+      if(strstr(buffer, "CERTIFICAT")){
+	char *tmp =  read_str_from_config_line(buffer);
+	config->certFile = (char*)malloc(sizeof(char)*strlen(tmp)+1);
+	memcpy(config->certFile,tmp,strlen(tmp)+1);
+	free(tmp);
       }
 	  
-	  if(strstr(buffer, "HTTPS_PORT")){
-		config->tls_port =  read_int_config(buffer);
+      if(strstr(buffer, "HTTP_PORT")){
+	config->port =  read_int_config(buffer);
       }
 	  
-	  if(strstr(buffer, "NBPROCESS")){
-		config->maxProcess =  read_int_config(buffer);
+      if(strstr(buffer, "HTTPS_PORT")){
+	config->tls_port =  read_int_config(buffer);
       }
 	  
-	  if(strstr(buffer, "NBTHREAD")){
-		config->maxThread =  read_int_config(buffer);
+      if(strstr(buffer, "NBPROCESS")){
+	config->maxProcess =  read_int_config(buffer);
       }
 	  
-	}
-	fclose(fp);
-	
-	return config;
+      if(strstr(buffer, "NBTHREAD")){
+	config->maxThread =  read_int_config(buffer);
+      }
+	  
+    }
+    fclose(fp);
+    return config;
 }

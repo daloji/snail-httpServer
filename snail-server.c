@@ -60,24 +60,24 @@ t_threadPool *THREADPOOL = NULL;
 
 
 void releaseAllMemory(){	
-	if(THREADPOOL != NULL){
-		releaseThreadPool(THREADPOOL);
-	}	
+  if(THREADPOOL != NULL){
+    releaseThreadPool(THREADPOOL);
+  }	
 }
 
 
 void signalCallback(int sigid){
-	switch(sigid){
-		case SIGKILL: 
-			releaseAllMemory();
-			break;
-		case SIGSTOP:
-			printf("received SIGSTOP\n");
-			break;
-		case SIGINT:
-			releaseAllMemory();
-			break;			
-	}
+  switch(sigid){
+    case SIGKILL: 
+	releaseAllMemory();
+    break;
+    case SIGSTOP:
+	printf("received SIGSTOP\n");
+    break;
+    case SIGINT:
+	releaseAllMemory();
+    break;			
+  }
 }
 
 
@@ -197,34 +197,25 @@ int sendFile(int fd, char *filename) {
 	  logger(SEVERE,"Erreur lors de l'ouverture du fichier \n");
 	  exit(EXIT_FAILURE);
    }
-	  
-	  int totalsize;
-	  struct stat st;
-	  stat(filename, &st);
-	  totalsize = st.st_size;
-	
-	  size_t size = 1;
-	  
-	  char *temp;
-	  if(  (temp = malloc(sizeof(char) * size)) == NULL )
-	  {
-	  fprintf(stderr, "Error allocating memory to temp in printFile()\n");
-	  exit(EXIT_FAILURE);
-	  }
-	  
-	  int end;
-	  while( (end = getline( &temp, &size, read)) > 0)
-	  {
+   int totalsize;
+   struct stat st;
+   stat(filename, &st);
+   totalsize = st.st_size;
+   size_t size = 1;
+   char *temp;
+   if(  (temp = malloc(sizeof(char) * size)) == NULL ){
+      fprintf(stderr, "Error allocating memory to temp in printFile()\n");
+      exit(EXIT_FAILURE);
+    }
+    int end;
+    while( (end = getline( &temp, &size, read)) > 0){
 	  write(fd, temp, strlen(temp));
-	  }
-	  
-	  write(fd, "\n",strlen("\n"));
-	  
-	  free(temp);
-	  
-	  return totalsize;
-  }
-
+    }
+    write(fd, "\n",strlen("\n"));
+    free(temp);
+      
+    return totalsize;
+ }
 
 /**
  * \brief     liberation de la memoire allouée pour la structure  t_httpRequest (cf #t_httpRequest)
@@ -453,50 +444,47 @@ void  *processRequest(void *argument){
 	exit(EXIT_FAILURE); 
   }
   while(1){
-	struct sockaddr_in addr;
-	int len = sizeof(addr);
-	//printListFile(list);
-	int listend = arg->socketFd;
-	//int con = accept(listend, &addr, &len);
-	int con = accept(listend, NULL, NULL);
-	//printf("Connection: %s:%d\n",inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));	
-	char * header = getMessage(con);
-	//printf("***************************************************\n");
-	//printf("%s ",header);
-	//printf("***************************************************\n");
-	logger(DEBUG,header);
-	t_httpResponse *httpresponse=NULL;
-	t_httpRequest *httpreq=NULL;
-	char responseHeader[MAX_BUFFER];
-	char *content = NULL;
-	char *filename = getFileName(arg->wwwDirectory,header);
-	if(filename != NULL){
-		httpreq = getTypeRequest(filename);
-		if(httpreq != NULL && httpreq->filename != NULL){
-		  if(strcmp(httpreq->extension,"woff2")==0 ||strcmp(httpreq->extension,"jpg") == 0 ){
-			sendBinaryFileSocket(con,httpreq);
-		  }else{
-			content = getFileContent(httpreq->filename);
-		  }
-		}
-	}
-	if(httpreq != NULL && content !=NULL){
-	  if(httpreq->encoding != NULL){
-		sprintf(responseHeader, header200,httpreq->encoding,strlen(content));
+    struct sockaddr_in addr;
+    int len = sizeof(addr);
+    //printListFile(list);
+    int listend = arg->socketFd;
+    //int con = accept(listend, &addr, &len);
+    int con = accept(listend, NULL, NULL);
+     logger(INFO,"pointeur de fonction thread repetoire de travail non defini \n");
+    //printf("Connection: %s:%d\n",inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));	
+    char * header = getMessage(con);
+    t_httpResponse *httpresponse=NULL;
+    t_httpRequest *httpreq=NULL;
+    char responseHeader[MAX_BUFFER];
+    char *content = NULL;
+    char *filename = getFileName(arg->wwwDirectory,header);
+    if(filename != NULL){
+	httpreq = getTypeRequest(filename);
+	if(httpreq != NULL && httpreq->filename != NULL){
+	  if(strcmp(httpreq->extension,"woff2")==0 ||strcmp(httpreq->extension,"jpg") == 0 ){
+	    sendBinaryFileSocket(con,httpreq);
+	  }else{
+	    content = getFileContent(httpreq->filename);
 	  }
 	}
-	if(content !=NULL && httpreq != NULL){
-	  sendHttp(con,responseHeader);
-	  sendHttp(con,content);
-	}
+    }
+    if(httpreq != NULL && content !=NULL){
+      if(httpreq->encoding != NULL){
+	sprintf(responseHeader, header200,httpreq->encoding,strlen(content));
+      }
+    }
+    if(content !=NULL && httpreq != NULL){
+      sendHttp(con,responseHeader);
+      sendHttp(con,content);
+    }
 	
-	//freeHttpRequest(httpreq);
+    freeHttpRequest(httpreq);
 
-	  //close(con);
-	}
-	free(arg->threadname);
-	free(arg);
-	
+    close(con);
+    }
+    free(arg->threadname);
+    free(arg);
+    
   }
 
 struct msg_buf {
@@ -507,88 +495,72 @@ struct msg_buf {
 
 
 int main(int argc, char *argv[]){
-	int listenfd = 0, connfd = 0 ,i = 0,pid;
-	struct sockaddr_in serv_addr; 
-	char sendBuff[1025];
+  int listenfd = 0, connfd = 0 ,i = 0,pid;
+  struct sockaddr_in serv_addr; 
+  char sendBuff[1025];
+  pthread_t threadLogger;
+  initlogger();  
 	
-	pthread_t threadLogger;
-	initlogger();  
-	
-	t_config *config= readconfig("server.conf");
-	if(config == NULL){
-		logger(FATAL,"erreur lors de la lecture de la configuration\n");
-		exit(-1);
-	}
-	if(config->port<0){
-		logger(FATAL,"port server non defini\n");
-		exit(-1);
-	}
-	
-	if(FILELOG == NULL){
-		FILELOG = fopen(config->filelog, "w");
-	}
-	
-	if(pthread_create(&threadLogger, NULL, &loggMessageTofile, config->filelog) == -1) {
-		fprintf(stderr, "Echec de la creation thread Logger -> allocation memoire impossible\n");
-		logger(FATAL,"Echec de la creation thread Logger -> allocation memoire impossible\n");
-		exit(EXIT_FAILURE);
-	}
-	
-	listenfd = socket(AF_INET, SOCK_STREAM, 0);
-	memset(&serv_addr, '0', sizeof(serv_addr));
-	memset(sendBuff, '0', sizeof(sendBuff)); 
+  t_config *config= readconfig("server.conf");
+  if(config == NULL){
+      logger(FATAL,"erreur lors de la lecture de la configuration\n");
+      exit(-1);
+   }
+   if(config->port<0){
+      logger(FATAL,"port server non defini\n");
+      exit(-1);
+   }
+    
+    
+   if(pthread_create(&threadLogger, NULL, &loggMessageTofile, config->filelog) == -1) {
+      fprintf(stderr, "Echec de la creation thread Logger -> allocation memoire impossible\n");
+      exit(EXIT_FAILURE);
+   }
 
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	serv_addr.sin_port = htons(config->port); 
-
-	bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
-	listen(listenfd, 10); 
-	 
-	t_argumentThread *argument = (t_argumentThread *) malloc(sizeof(t_argumentThread));
-	if(argument == NULL){
-	  fprintf(stderr, "Echec de la creation argument thread -> allocation memoire impossible\n");
-	  logger(FATAL,"Echec de la creation argument thread -> allocation memoire impossible\n");
-	  exit(-1);
-	}
-	 argument->poolId=getpid();
-	 argument->socketFd=listenfd;
+   listenfd = socket(AF_INET, SOCK_STREAM, 0);
+   memset(&serv_addr, '0', sizeof(serv_addr));
+   memset(sendBuff, '0', sizeof(sendBuff)); 
+   serv_addr.sin_family = AF_INET;
+   serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+   serv_addr.sin_port = htons(config->port); 
+   bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
+   listen(listenfd, 10); 
+   t_argumentThread *argument = (t_argumentThread *) malloc(sizeof(t_argumentThread));
+   if(argument == NULL){
+      fprintf(stderr, "Echec de la creation argument thread -> allocation memoire impossible\n");
+      logger(FATAL,"Echec de la creation argument thread -> allocation memoire impossible\n");
+      exit(-1);
+   }
+   argument->poolId=getpid();
+   argument->socketFd=listenfd;
+   if(config->wwwDirectory ==NULL){
+      logger(FATAL,"repertoire source non configuré dans le fichier de configuration\n");
+      exit(-1);
+   }
 	  
-	if(config->wwwDirectory ==NULL){
-		logger(FATAL,"repertoire source non configuré dans le fichier de configuration\n");
-		exit(-1);
-	 }
-	  
-	argument->wwwDirectory=config->wwwDirectory;
-
-	for(i=0;i<config->maxProcess;i++){
-	
-	 //prefork mode     
-	  pid=fork();
-	  if (pid == -1){
-		fprintf(stderr, "echec lors de l'appel a fork\n");
-		logger(FATAL,"echec lors de l'appel a fork \n");
-		exit(EXIT_FAILURE);
+   argument->wwwDirectory=config->wwwDirectory;
+   for(i=0;i<config->maxProcess;i++){
+      //prefork mode     
+      pid=fork();
+      if (pid == -1){
+	fprintf(stderr, "echec lors de l'appel a fork\n");
+	logger(FATAL,"echec lors de l'appel a fork \n");
+	exit(EXIT_FAILURE);
+      }
+      if(pid==0){  
+	THREADPOOL = createThreadPool(config->maxThread,(void *)processRequest,(void *)argument);
+	}else{
+	  if (waitpid(pid, NULL, 0) < 0) {
+	    logger(FATAL,"echec fatal waitpid \n");
+	    break;
 	  }
+	} 
+    }
 	  
-	  if(pid==0){
-		initlogger();  
-		THREADPOOL = createThreadPool(config->maxThread,(void *)processRequest,(void *)argument);
-	  }else{
-		 
-		if (waitpid(pid, NULL, 0) < 0) {
-		  logger(FATAL,"echec fatal waitpid \n");
-		  break;
-		  }
-	  } 
-	}
-	 
-
-	signal(SIGINT, signalCallback);
-	signal(SIGKILL, signalCallback);
-	signal(SIGSTOP, signalCallback);
-	pthread_exit(NULL);
-	waitpid(WAIT_ANY, NULL, WNOHANG);
-	exit(1);
-	 
+    signal(SIGINT, signalCallback);
+    signal(SIGKILL, signalCallback);
+    signal(SIGSTOP, signalCallback);
+    pthread_exit(NULL);
+    waitpid(WAIT_ANY, NULL, WNOHANG);
+    exit(1); 
   }
