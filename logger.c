@@ -11,11 +11,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
-
 #include "logger.h"
 #define BUFFER 1024
-char* pipe_named ="/tmp/fifo";
-
 
 static int msgid;
 

@@ -20,8 +20,7 @@
 #include "threadpool.h"
 #include "config.h"
 #include "logger.h"
-#define MSGPERM 0600    // msg queue permission
-#define MSGTXTLEN 128   // msg text length
+
 const char* POINT =".";
 const char* DOUBLE_POINT ="..";
 
@@ -30,7 +29,7 @@ const char *header400 = "HTTP/1.0 400 Bad Request\nServer: Snail Http Server 1.0
 const char *header404 = "HTTP/1.0 404 Not Found\nServer: Snail Http Server 1.0\nContent-Type: %s\n\n";
 const char *header500 = "HTTP/1.0 500 Internal server error\nServer:Snail Http Server 1.0\n\n";
 
-FILE *FILELOG = NULL;
+
 //structure reponse HTTP
 typedef struct{
    /* code de retour (200/300/400/500/....) */
@@ -56,7 +55,6 @@ typedef struct{
 }t_httpRequest;
 
 t_threadPool *THREADPOOL = NULL;
-
 
 
 void releaseAllMemory(){	
@@ -106,31 +104,29 @@ const char* get_filename_ext(const char *filename) {
  * \return    type d'encodage du fichier si le type d'encodage est inconnu renvoi NULL
  */
 const char * getEncodage(const char *filename){
-	if(filename == NULL){
-		fprintf(stderr, "recuperation encodage impossible extension fichier non definie \n");
-		logger(SEVERE,"recuperation encodage impossible extension fichier non definie \n");
-		return NULL;
-	}
-	const char *fileExtension = get_filename_ext(filename);
-	if(fileExtension == NULL){
-		fprintf(stderr, "encodage extension fichier non definie \n");
-		logger(SEVERE,"encodage extension fichier non definie \n");
-		return NULL;
-	}
-
-	int i=0;
-	char *ptrext = extensions[0].ext;
-	char *encode = NULL;
-	while(ptrext !=NULL){
-		if(strcmp(extensions[i].ext,fileExtension)==0){
-			encode =extensions[i].filetype;
-			break;
-		}
-		i++;
-		ptrext = extensions[i].ext;
-	}
-
-	return encode;
+  if(filename == NULL){
+    fprintf(stderr, "recuperation encodage impossible extension fichier non definie \n");
+    logger(SEVERE,"recuperation encodage impossible extension fichier non definie \n");
+    return NULL;
+  }
+  const char *fileExtension = get_filename_ext(filename);
+  if(fileExtension == NULL){
+    fprintf(stderr, "encodage extension fichier non definie \n");
+    logger(SEVERE,"encodage extension fichier non definie \n");
+    return NULL;
+  }
+  int i=0;
+  char *ptrext = extensions[0].ext;
+  char *encode = NULL;
+  while(ptrext !=NULL){
+    if(strcmp(extensions[i].ext,fileExtension)==0){
+      encode =extensions[i].filetype;
+      break;
+    }
+    i++;
+    ptrext = extensions[i].ext;
+  }
+  return encode;
 }
 
   
@@ -143,11 +139,11 @@ const char * getEncodage(const char *filename){
  * \param    t_httpRequest   structure de la requete .
  */
 void freeStatus(t_httpRequest* req){
-	if(req){
-	  if(req->filename)
-	free(req->filename);
-	  free(req);
-	}
+  if(req){
+    if(req->filename)
+      free(req->filename);
+    free(req);
+  }
 }
 
 /**
@@ -158,44 +154,41 @@ void freeStatus(t_httpRequest* req){
  * \param  char nom du fichier 
  * \return   contenu binaire du fichier renvoi NULL en cas de problème de lecture
  */
-char * getFileContent(const char* filename){ 
-   if(filename==NULL){
-	  fprintf(stderr, "nom du fichier non definie\n");
-	  logger(SEVERE,"nom du fichier non definie \n");
-	  return NULL;
+char * getFileContent(const char* filename){
+  if(filename==NULL){
+    fprintf(stderr, "nom du fichier non definie\n");
+    logger(SEVERE,"nom du fichier non definie \n");
+    return NULL;
+  }
+  char *buffer = NULL;
+  int string_size, read_size;
+  FILE *fp = fopen(filename, "rb");
+  if(fp==NULL){
+    fprintf(stderr, "erreur lors de l'acces au fichier %s \n",filename);
+    logger(SEVERE,"erreur lors de l'acces au fichier \n");
+    return NULL;
    }
-   char *buffer = NULL;
-   int string_size, read_size;
-   FILE *fp = fopen(filename, "rb");
-   if(fp==NULL){
-	  fprintf(stderr, "erreur lors de l'acces au fichier %s \n",filename);
-	  logger(SEVERE,"erreur lors de l'acces au fichier \n");
-	  return NULL;
-   }
-	
    fseek(fp, 0, SEEK_END);
    string_size = ftell(fp);
-	rewind(fp);
-	
-	buffer = (char*) malloc(sizeof(char) * (string_size + 1) );
-	read_size = fread(buffer, sizeof(char), string_size, fp);
-	buffer[string_size] = '\0';
-	if (string_size != read_size){
-	  free(buffer);
-	  return NULL;
-	}
-
-	fclose(fp);
+   rewind(fp);
+   buffer = (char*) malloc(sizeof(char) * (string_size + 1) );
+   read_size = fread(buffer, sizeof(char), string_size, fp);
+   buffer[string_size] = '\0';
+   if (string_size != read_size){
+     free(buffer);
+     return NULL;
+  }
+  fclose(fp);
   return  buffer;
   
-  }
+}
 
 int sendFile(int fd, char *filename) {
-   FILE *read;
-   if( (read = fopen(filename, "r")) == NULL){
-	  fprintf(stderr, "Erreur lors de l'ouverture du fichier \n");
-	  logger(SEVERE,"Erreur lors de l'ouverture du fichier \n");
-	  exit(EXIT_FAILURE);
+  FILE *read;
+  if( (read = fopen(filename, "r")) == NULL){
+    fprintf(stderr, "Erreur lors de l'ouverture du fichier \n");
+    logger(SEVERE,"Erreur lors de l'ouverture du fichier \n");
+    exit(EXIT_FAILURE);
    }
    int totalsize;
    struct stat st;
@@ -203,13 +196,13 @@ int sendFile(int fd, char *filename) {
    totalsize = st.st_size;
    size_t size = 1;
    char *temp;
-   if(  (temp = malloc(sizeof(char) * size)) == NULL ){
-      fprintf(stderr, "Error allocating memory to temp in printFile()\n");
-      exit(EXIT_FAILURE);
+   if((temp = malloc(sizeof(char) * size)) == NULL ){
+     fprintf(stderr, "Error allocating memory to temp in printFile()\n");
+     exit(EXIT_FAILURE);
     }
     int end;
     while( (end = getline( &temp, &size, read)) > 0){
-	  write(fd, temp, strlen(temp));
+      write(fd, temp, strlen(temp));
     }
     write(fd, "\n",strlen("\n"));
     free(temp);
@@ -225,24 +218,22 @@ int sendFile(int fd, char *filename) {
  */  
 void freeHttpRequest(t_httpRequest *req){
   if(req != NULL){
-		if(req->filename != NULL ){
-			free(req->filename);
-		}
-		
-		if(req->encoding != NULL ){
-			free(req->encoding);
-		}
-		if(req->extension != NULL ){
-			free(req->extension);
-		}
-		if(req->getmethod != NULL){
-			//free(req->getmethod);
-		}
-	
-		if(req->postmethod != NULL){
-			//free(req->postmethod);
-		}
-	free(req);
+    if(req->filename != NULL ){
+      free(req->filename);
+    }
+    if(req->encoding != NULL ){
+      free(req->encoding);
+    }
+    if(req->extension != NULL ){
+      free(req->extension);
+    }
+    if(req->getmethod != NULL){
+      //free(req->getmethod);
+    }
+    if(req->postmethod != NULL){
+      //free(req->postmethod);
+    }
+    free(req);
   }
 }
 
@@ -259,42 +250,41 @@ void freeHttpRequest(t_httpRequest *req){
  * \return  t_httpRequest (cf #t_httpRequest)  contenu binaire du fichier renvoi NULL en cas de problème de lecture
  */
 t_httpRequest * getTypeRequest(const char* filename){
-	t_httpRequest *req = NULL;
-	if(filename != NULL){
-	  char *tempfile = calloc(strlen(filename)+1,sizeof(char));
-	  strcpy(tempfile,filename);
-	  char *path = strtok(tempfile,"?");
-	  if(path != NULL){
-		req =(t_httpRequest *) malloc(sizeof(t_httpRequest));
-		if(req == NULL){
-			fprintf(stderr, "erreur allocation memoire\n");
-			exit(EXIT_FAILURE);
-		}
-		req->filename = malloc(sizeof(char)*strlen(path)+1);
-		strcpy(req->filename,path);
-		const char *extensionfile = get_filename_ext(req->filename);
-		if(extensionfile != NULL){
-			req->extension = (char*)malloc((strlen(extensionfile)+1)*sizeof(char));
-			strcpy(req->extension,extensionfile); 
-		}
-		const char *encode = getEncodage(req->filename);
-		if(encode != NULL){
-			req->encoding = (char*)malloc((strlen(encode)+1)*sizeof(char));
-			strcpy(req->encoding,encode);
-		}else{
-			req->encoding = (char*)malloc((strlen("text/plain")+1)*sizeof(char));
-			strcpy(req->encoding,"text/plain");
-		}
-		char *getparam = strstr(filename,"?");
-		if(getparam != NULL){
-			req->getmethod = malloc(sizeof(char)*strlen(getparam)+1);
-			strcpy(req->getmethod,getparam);
-		}
-	  }
-	}
+  t_httpRequest *req = NULL;
+  if(filename != NULL){
+    char *tempfile = calloc(strlen(filename)+1,sizeof(char));
+    strcpy(tempfile,filename);
+    char *path = strtok(tempfile,"?");
+    if(path != NULL){req =(t_httpRequest *) malloc(sizeof(t_httpRequest));
+      if(req == NULL){
+	fprintf(stderr, "erreur allocation memoire\n");
+	exit(EXIT_FAILURE);
+      }
+      req->filename = malloc(sizeof(char)*strlen(path)+1);
+      strcpy(req->filename,path);
+      const char *extensionfile = get_filename_ext(req->filename);
+      if(extensionfile != NULL){
+	req->extension = (char*)malloc((strlen(extensionfile)+1)*sizeof(char));
+	strcpy(req->extension,extensionfile);
+      }
+      const char *encode = getEncodage(req->filename);
+      if(encode != NULL){
+	req->encoding = (char*)malloc((strlen(encode)+1)*sizeof(char));
+	strcpy(req->encoding,encode);
+      }else{
+	req->encoding = (char*)malloc((strlen("text/plain")+1)*sizeof(char));
+	strcpy(req->encoding,"text/plain");
+      }
+      char *getparam = strstr(filename,"?");
+      if(getparam != NULL){
+	req->getmethod = malloc(sizeof(char)*strlen(getparam)+1);
+	strcpy(req->getmethod,getparam);
+      }
+    }
+  }
 	
   return req; 
-  }
+}
 
   
 /**
@@ -309,125 +299,115 @@ t_httpRequest * getTypeRequest(const char* filename){
  */
 int sendBinaryFileSocket(int sock,const  t_httpRequest *httpreq){
   char responseHeader[MAX_BUFFER];
-  
   if(httpreq == NULL  || httpreq->filename == NULL || httpreq->encoding == NULL){
-	// internal error 500
-	sprintf(responseHeader, header500);
-	sendHttp(sock,responseHeader);
+    // internal error 500
+    sprintf(responseHeader, header500);
+    sendHttp(sock,responseHeader);
   }else{
-	FILE *file = fopen(httpreq->filename, "rb");
-	fseek(file, 0, SEEK_END);
-	int size = ftell(file);
-	rewind(file);
-	char send_buffer[size];
-	sprintf(responseHeader, header200,httpreq->encoding,size);
-	sendHttp(sock,responseHeader);
-	while(!feof(file)) {
-	  fread(send_buffer, 1, sizeof(send_buffer), file);
-	  write(sock, send_buffer, sizeof(send_buffer));
-	  bzero(send_buffer, sizeof(send_buffer));
-	}
+    FILE *file = fopen(httpreq->filename, "rb");
+    fseek(file, 0, SEEK_END);
+    int size = ftell(file);
+    rewind(file);
+    char send_buffer[size];
+    sprintf(responseHeader, header200,httpreq->encoding,size);
+    sendHttp(sock,responseHeader);
+    while(!feof(file)) {
+      fread(send_buffer, 1, sizeof(send_buffer), file);
+      write(sock, send_buffer, sizeof(send_buffer));
+      bzero(send_buffer, sizeof(send_buffer));
+    }
    fclose(file); 
   }
-  
-  return 0;
-  
+ return 0; 
 }
 
 int sendHttp(int fd, void *content){
-	int retval = -1;
-	if(content != NULL){
-	  retval = write(fd, content, strlen(content));
-	}
+  int retval = -1;
+  if(content != NULL){
+    retval = write(fd, content, strlen(content));
+  }
   return retval; 
 }
 
 
 char *getMessage(int fd) {
-	  //file stream
-	  FILE *sstream;
-	  // ouverture du file stream et erreur en cas d'echec d'ouverture
-	  if( (sstream = fdopen(fd, "r")) == NULL){
-	  fprintf(stderr, "Error opening file descriptor in getMessage()\n");
-	  exit(EXIT_FAILURE);
-	  }
-	  // Size variable utilisée pour recuprer la taille de chaque bloc lu (taille 1 octet) bloc inital
-	  size_t size = 1;
-	  char *block = NULL;
-	  // Allocation memoire  variable bloc pour chaque block memoire 
-	  if( (block = malloc(sizeof(char) * size)) == NULL ){
-	  fprintf(stderr, "Error allocating memory to block in getMessage\n");
-	  exit(EXIT_FAILURE);
-	  }
-	  // initialistion chaine null   
-	  *block = '\0';
-	  // Allocation block memoire 
-	  char *tmp = NULL;
-	  if( (tmp = malloc(sizeof(char) * size)) == NULL ){
-	  fprintf(stderr, "Error allocating memory to tmp in getMessage\n");
-	  exit(EXIT_FAILURE);
-	  }
-	  // initialistion chaine null 
-	  *tmp = '\0';
-	  // taille du flux lu
-	  int oldsize = 1;
-	  // recuperation de chaque line du flux
-	  while(getline( &tmp, &size, sstream) > 0){
-	  // si le flux lu contient un retour chariot (\n) et une sepace (fin de ligne flux)
-	  if( strcmp(tmp, "\r\n") == 0){
-		  break;
-	  }
-	  
-	  // redimensionement du block
-	  block = realloc(block, size+oldsize);
-	  //memorisation de la taille des blocs lu
-	  oldsize += size;
-	  //concatenation du chaque bloc lu
-	  strcat(block, tmp);
-	  }
-	  
-	  // liberation memoire
-	  free(tmp);
-	  
-	  // Return header HTTP
-	  return block;
+  //file stream
+  FILE *sstream;
+  // ouverture du file stream et erreur en cas d'echec d'ouverture
+  if( (sstream = fdopen(fd, "r")) == NULL){
+    fprintf(stderr, "Error opening file descriptor in getMessage()\n");
+    exit(EXIT_FAILURE);
+  }
+  // Size variable utilisée pour recuprer la taille de chaque bloc lu (taille 1 octet) bloc inital
+  size_t size = 1;
+  char *block = NULL;
+  // Allocation memoire  variable bloc pour chaque block memoire 
+  if( (block = malloc(sizeof(char) * size)) == NULL ){
+    fprintf(stderr, "Error allocating memory to block in getMessage\n");
+    exit(EXIT_FAILURE);
+  }
+  // initialistion chaine null   
+  *block = '\0';
+  // Allocation block memoire 
+  char *tmp = NULL;
+  if( (tmp = malloc(sizeof(char) * size)) == NULL ){
+    fprintf(stderr, "Error allocating memory to tmp in getMessage\n");
+    exit(EXIT_FAILURE);
+  }
+  // initialistion chaine null 
+  *tmp = '\0';
+  // taille du flux lu
+  int oldsize = 1;
+  // recuperation de chaque line du flux
+  while(getline( &tmp, &size, sstream) > 0){
+    // si le flux lu contient un retour chariot (\n) et une sepace (fin de ligne flux)
+    if( strcmp(tmp, "\r\n") == 0){
+      break;
+    }
+    // redimensionement du block
+    block = realloc(block, size+oldsize);
+    //memorisation de la taille des blocs lu
+    oldsize += size;
+    //concatenation du chaque bloc lu
+    strcat(block, tmp);
+  }
+  // liberation memoire
+  free(tmp);
+  // Return header HTTP
+  return block;
 }
 
 
 // Extracts the filename needed from a GET request and adds public_html to the front of it
 char * getFileName(char* directory,char* header){
-	if(directory == NULL){
-		fprintf(stderr, "repertoire racine NULL\n");
-		logger(FATAL,"repertoire racine NULL \n");
-		return NULL;
-	}
-	if(header == NULL){
-		fprintf(stderr, "header de la requete NULL\n");
-		logger(FATAL,"header de la requete NULL \n");
-		return NULL;
-	}
-  
-	char * file = NULL;
-	// Allocate some memory for the filename and check it went OK
-	if( (file = malloc(sizeof(char) * strlen(header))) == NULL){
-	  fprintf(stderr, "Erreur lors de l'allocation memoire  getFileName()\n");
-	  logger(FATAL,"Erreur lors de l'allocation memoire  getFileName() \n");
-	  exit(EXIT_FAILURE);
-	}
-
-	sscanf(header, "GET %s HTTP/1.1", file);
-	char *base = NULL;
-	if( (base = malloc(sizeof(char) * (strlen(file) + strlen(directory)+1))) == NULL){
-	  fprintf(stderr, "Erreur lors de l'allocation memoire  getFileName()\n");
-	  logger(FATAL,"Erreur lors de l'allocation memoire  getFileName() \n");
-	  exit(EXIT_FAILURE);
-	}
-
-	strcpy(base, directory);
-	strcat(base, file);
-	free(file); 
-
-	return base;
+  if(directory == NULL){
+    fprintf(stderr, "repertoire racine NULL\n");
+    logger(FATAL,"repertoire racine NULL \n");
+    return NULL;
+  }
+  if(header == NULL){
+    fprintf(stderr, "header de la requete NULL\n");
+    logger(FATAL,"header de la requete NULL \n");
+    return NULL;
+  }
+  char * file = NULL;
+  // Allocate some memory for the filename and check it went OK
+  if( (file = malloc(sizeof(char) * strlen(header))) == NULL){
+    fprintf(stderr, "Erreur lors de l'allocation memoire  getFileName()\n");
+    logger(FATAL,"Erreur lors de l'allocation memoire  getFileName() \n");
+    exit(EXIT_FAILURE);
+  }
+  sscanf(header, "GET %s HTTP/1.1", file);
+  char *base = NULL;
+  if( (base = malloc(sizeof(char) * (strlen(file) + strlen(directory)+1))) == NULL){
+    fprintf(stderr, "Erreur lors de l'allocation memoire  getFileName()\n");
+    logger(FATAL,"Erreur lors de l'allocation memoire  getFileName() \n");
+    exit(EXIT_FAILURE);
+  }
+  strcpy(base, directory);
+  strcat(base, file);
+  free(file); 
+  return base;
 }
 
 /**
@@ -439,9 +419,9 @@ char * getFileName(char* directory,char* header){
 void  *processRequest(void *argument){
   t_argumentThread *arg = (t_argumentThread *)argument;
   if(arg->wwwDirectory == NULL){
-	fprintf(stderr, "pointeur de fonction thread repetoire de travail non defini\n");
-	logger(FATAL,"pointeur de fonction thread repetoire de travail non defini \n");
-	exit(EXIT_FAILURE); 
+    fprintf(stderr, "pointeur de fonction thread repetoire de travail non defini\n");
+    logger(FATAL,"pointeur de fonction thread repetoire de travail non defini \n");
+    exit(EXIT_FAILURE); 
   }
   while(1){
     struct sockaddr_in addr;
@@ -459,14 +439,14 @@ void  *processRequest(void *argument){
     char *content = NULL;
     char *filename = getFileName(arg->wwwDirectory,header);
     if(filename != NULL){
-	httpreq = getTypeRequest(filename);
-	if(httpreq != NULL && httpreq->filename != NULL){
-	  if(strcmp(httpreq->extension,"woff2")==0 ||strcmp(httpreq->extension,"jpg") == 0 ){
-	    sendBinaryFileSocket(con,httpreq);
-	  }else{
-	    content = getFileContent(httpreq->filename);
-	  }
+      httpreq = getTypeRequest(filename);
+      if(httpreq != NULL && httpreq->filename != NULL){
+	if(strcmp(httpreq->extension,"woff2")==0 ||strcmp(httpreq->extension,"jpg") == 0 ){
+	  sendBinaryFileSocket(con,httpreq);
+	}else{
+	  content = getFileContent(httpreq->filename);
 	}
+      }
     }
     if(httpreq != NULL && content !=NULL){
       if(httpreq->encoding != NULL){
@@ -477,20 +457,13 @@ void  *processRequest(void *argument){
       sendHttp(con,responseHeader);
       sendHttp(con,content);
     }
-	
     freeHttpRequest(httpreq);
-
     close(con);
-    }
-    free(arg->threadname);
-    free(arg);
-    
   }
+  free(arg->threadname);
+  free(arg);
+}
 
-struct msg_buf {
-  long mtype;
-  char mtext[MSGTXTLEN];
-} msg;
 
 
 
@@ -500,21 +473,20 @@ int main(int argc, char *argv[]){
   char sendBuff[1025];
   pthread_t threadLogger;
   initlogger();  
-	
   t_config *config= readconfig("server.conf");
   if(config == NULL){
-      logger(FATAL,"erreur lors de la lecture de la configuration\n");
-      exit(-1);
+    logger(FATAL,"erreur lors de la lecture de la configuration\n");
+    exit(-1);
    }
    if(config->port<0){
-      logger(FATAL,"port server non defini\n");
-      exit(-1);
+     logger(FATAL,"port server non defini\n");
+     exit(-1);
    }
     
     
    if(pthread_create(&threadLogger, NULL, &loggMessageTofile, config->filelog) == -1) {
-      fprintf(stderr, "Echec de la creation thread Logger -> allocation memoire impossible\n");
-      exit(EXIT_FAILURE);
+     fprintf(stderr, "Echec de la creation thread Logger -> allocation memoire impossible\n");
+     exit(EXIT_FAILURE);
    }
 
    listenfd = socket(AF_INET, SOCK_STREAM, 0);
