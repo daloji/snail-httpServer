@@ -430,7 +430,6 @@ void  *processRequest(void *argument){
     int listend = arg->socketFd;
     //int con = accept(listend, &addr, &len);
     int con = accept(listend, NULL, NULL);
-     logger(INFO,"pointeur de fonction thread repetoire de travail non defini \n");
     //printf("Connection: %s:%d\n",inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));	
     char * header = getMessage(con);
     t_httpResponse *httpresponse=NULL;
