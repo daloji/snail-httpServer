@@ -18,8 +18,6 @@ struct logItem{
 };
 
 
-
-
 struct queingLog{
   t_logItem *front;
   t_logItem *rear;
@@ -31,6 +29,7 @@ struct queingLog{
 
 typedef struct queingLog t_queingLog;
 
+void  *loggMessageTofile(void *argument);
 
 t_queingLog *QUEUELOG;
  
@@ -45,6 +44,8 @@ void initlogger();
 void logger(typelog tag, const char* message);
 
 const char* tagToString(typelog tag);
+
+int getSizeQueue();
 
 
 
