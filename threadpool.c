@@ -100,29 +100,26 @@ t_threadPool* createThreadPool(int thread_count,void (*function)(void *),void *a
  * \param  t_threadPool (cf #t_threadPool)  pool de thread a supprimé
  */
 void releaseThreadPool(t_threadPool*  threadpool){
-		t_taskThread *pt = threadpool->listthread;
-		while(pt != NULL){
-			if(pt->nameThead != NULL){
-				free(pt->nameThead);
-			}
-			if(pt->thread != NULL){
-				pthread_cancel(pt->thread);
-			}
-			if(pt->executeFunction != NULL){
-				if(pt->executeFunction->argument != NULL){
-					t_argumentThread *arg = pt->executeFunction->argument;
-					if(arg->threadname){
-						free(arg->threadname);
-					}
-					if(arg->wwwDirectory){
-						free(arg->wwwDirectory);
-					}	
-					free(pt->executeFunction->argument);
-				}
-				free(pt->executeFunction);
-			}		
-			pt=pt->next;			
-		}
-		
-		free(threadpool);
+  t_taskThread *pt = threadpool->listthread;
+  while(pt != NULL){
+    if(pt->nameThead != NULL){
+	free(pt->nameThead);
+    }
+    pthread_cancel(pt->thread);
+    if(pt->executeFunction != NULL){
+	if(pt->executeFunction->argument != NULL){
+	    t_argumentThread *arg = pt->executeFunction->argument;
+	    if(arg->threadname){
+		free(arg->threadname);
+	    }
+	    if(arg->wwwDirectory){
+		free(arg->wwwDirectory);
+	    }	
+	    free(pt->executeFunction->argument);
+	}
+	free(pt->executeFunction);
+      }		
+    pt=pt->next;			
+  }
+  free(threadpool);
 }
