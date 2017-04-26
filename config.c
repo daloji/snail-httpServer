@@ -5,6 +5,15 @@
 #define MAXBUF 1024 
 #include "config.h"
 
+/**
+ * \fn int read_int_config(char* config_line)
+ * \brief  transformation d'une donnee de type chainde de caractere en entier utilisée dans la configuration
+ * \details   la fonction est utilisée pour la lecture du fichier de configuration
+ *	     du serveur, cette fonction est la premiere a etre executé par le serveur 
+ *   
+ * \param  char *string configuration
+ * \return entier 
+ */
 int read_int_config(char* config_line) {    
   char prm_name[MAXBUF];
   int val;
@@ -12,7 +21,16 @@ int read_int_config(char* config_line) {
   return val;
 }
 
-
+/**
+ * \fn char* read_str_from_config_line(char* config_line)
+ * \brief  transformation d'une donnee de type chainde de caractere en entier
+ * 	  utilisée dans las configuration
+ * \details   la fonction est utilisée pour la lecture du fichier de configuration
+ *	     du serveur, cette fonction est la premiere a etre executé par le serveur 
+ *   
+ * \param  char *string configuration
+ * \return entier 
+ */
 char* read_str_from_config_line(char* config_line) {  
   char *val = NULL;
   char prm_name[MAXBUF];
