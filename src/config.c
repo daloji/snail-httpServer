@@ -5,6 +5,7 @@
 #define MAXBUF 1024 
 #include "config.h"
 
+
 /**
  * \fn int read_int_config(char* config_line)
  * \brief  transformation d'une donnee de type chainde de caractere en entier utilisée dans la configuration
@@ -87,6 +88,13 @@ t_config * readconfig(char *filename){
       char *tmp =  read_str_from_config_line(buffer);
       config->certFile = (char*)malloc(sizeof(char)*strlen(tmp)+1);
       memcpy(config->certFile,tmp,strlen(tmp)+1);
+      free(tmp);
+    }
+    if(strstr(buffer, "ACTIVE_TLS")){
+      char *tmp =  read_str_from_config_line(buffer);
+      if(strcmp(tmp,"enable")==0){
+	 config->activeTls = 1;
+      }
       free(tmp);
     }
 	  
