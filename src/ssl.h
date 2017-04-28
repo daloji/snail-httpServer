@@ -3,5 +3,5 @@
 
 SSL_CTX* InitServerCTX(void);
 
-void chargementCertificates(SSL_CTX* ctx, char* CertFile, char* KeyFile);
+void chargementCertificats(SSL_CTX* ctx, char* CertFile, char* KeyFile);
 #endif

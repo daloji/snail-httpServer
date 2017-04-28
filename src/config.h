@@ -29,6 +29,8 @@ struct config{
    
    char *certFile;  /*!< fichier  certificat */
    
+   char *privateKey;  /*!< clé privée */
+   
    int activeTls; /*!< active tls */
    
    int port; /*!< port d'ecoute du serveur */ 

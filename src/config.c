@@ -70,6 +70,7 @@ t_config * readconfig(char *filename){
     if(buffer[0] == '#' || strlen(buffer) < 4) {
        continue;
     }
+   
     if(strstr(buffer, "DIRECTORY")){
       char *tmp =  read_str_from_config_line(buffer);
       config->wwwDirectory = (char*)malloc(sizeof(char)*strlen(tmp)+1);
@@ -83,13 +84,22 @@ t_config * readconfig(char *filename){
       memcpy(config->filelog,tmp,strlen(tmp)+1);
       free(tmp);
     }
-	  
+;	  
     if(strstr(buffer, "CERTIFICAT")){
       char *tmp =  read_str_from_config_line(buffer);
       config->certFile = (char*)malloc(sizeof(char)*strlen(tmp)+1);
       memcpy(config->certFile,tmp,strlen(tmp)+1);
+   
       free(tmp);
     }
+    
+    if(strstr(buffer, "PRIVATE_KEY")){
+      char *tmp =  read_str_from_config_line(buffer);
+      config->privateKey = (char*)malloc(sizeof(char)*strlen(tmp)+1);
+      memcpy(config->privateKey,tmp,strlen(tmp)+1);
+      free(tmp);
+    }
+    
     if(strstr(buffer, "ACTIVE_TLS")){
       char *tmp =  read_str_from_config_line(buffer);
       if(strcmp(tmp,"enable")==0){

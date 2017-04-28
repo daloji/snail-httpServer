@@ -1,8 +1,9 @@
+#ifndef _THPOOL_
+#define _THPOOL_
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#ifndef _THPOOL_
-#define _THPOOL_
+#include <openssl/ssl.h>
 
 typedef struct taskThread t_taskThread;
 
@@ -21,6 +22,8 @@ struct argumentThread{
   
   int socketFd; /*!< socket utilisé par le Thread)*/
   
+  SSL_CTX *sslContext;/*!< SSL context*/
+   
   char *threadname; /*!< nom du  Thread)*/
   
   char *wwwDirectory; /*!< une espace de travaille (ex: /var/www/) contenant les sources de votres site web utilisé par le Thread)*/
@@ -37,7 +40,7 @@ struct taskThread{
   
   t_processFunction *executeFunction; /*!< ponteur de fonction (fonction a executé par le Thread)*/
   
-  int poolId;
+  int poolId;/*!< pool id)*/
   int threadId;
   int state;
   t_taskThread *next;

@@ -38,7 +38,7 @@ SSL_CTX* InitServerCTX(void){
 
   
 /**
- * \fn void chargementCertificates(SSL_CTX* ctx, char* CertFile, char* KeyFile)
+ * \fn void chargementCertificats(SSL_CTX* ctx, char* CertFile, char* KeyFile)
  * \brief    chargement du Certificat 
  * \details  le certificat est chargé en entrée avec la cle privée (dans le cas
  *  ou la clé privée et le certificat ne correspondent pas le chargement est annulé
@@ -48,7 +48,7 @@ SSL_CTX* InitServerCTX(void){
  * \param  char*  chemin vers la clé priveé
  * \return 
  */
-void chargementCertificates(SSL_CTX* ctx, char* CertFile, char* KeyFile){
+void chargementCertificats(SSL_CTX* ctx, char* CertFile, char* KeyFile){
   /* initialisation du certificat dans le context */
   if ( SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0 ){
     ERR_print_errors_fp(stderr);

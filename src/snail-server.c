@@ -17,14 +17,17 @@
 #include <dirent.h>
 #include <string.h>
 #include <pthread.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 #include "threadpool.h"
 #include "config.h"
 #include "logger.h"
+#include "ssl.h"
 
 const char* POINT =".";
 const char* DOUBLE_POINT ="..";
 
-const  char *header200 = "HTTP/1.0 200 OK\nServer: Snail Http Server 1.0 \nContent-Type: %s\ncontent-length: %d \n\n";
+const char *header200 = "HTTP/1.0 200 OK\nServer: Snail Http Server 1.0 \nContent-Type: %s\ncontent-length: %d \n\n";
 const char *header400 = "HTTP/1.0 400 Bad Request\nServer: Snail Http Server 1.0\nContent-Type: %s\n\n";
 const char *header404 = "HTTP/1.0 404 Not Found\nServer: Snail Http Server 1.0\nContent-Type: %s\n\n";
 const char *header500 = "HTTP/1.0 500 Internal server error\nServer:Snail Http Server 1.0\n\n";
@@ -55,6 +58,7 @@ typedef struct{
 }t_httpRequest;
 
 t_threadPool *THREADPOOL = NULL;
+t_threadPool *THREADPOOL_HTTPS = NULL;
 
 
 void releaseAllMemory(){	
@@ -165,7 +169,6 @@ char * getFileContent(const char* filename){
   FILE *fp = fopen(filename, "rb");
   if(fp==NULL){
     fprintf(stderr, "erreur lors de l'acces au fichier %s \n",filename);
-    logger(SEVERE,"erreur lors de l'acces au fichier \n");
     return NULL;
    }
    fseek(fp, 0, SEEK_END);
@@ -228,6 +231,7 @@ void freeHttpRequest(t_httpRequest *req){
       free(req->extension);
     }
     if(req->getmethod != NULL){
+      //printf("************************************\n");
       //free(req->getmethod);
     }
     if(req->postmethod != NULL){
@@ -277,7 +281,7 @@ t_httpRequest * getTypeRequest(const char* filename){
       }
       char *getparam = strstr(filename,"?");
       if(getparam != NULL){
-	req->getmethod = malloc(sizeof(char)*strlen(getparam)+1);
+	req->getmethod = (char*)malloc(sizeof(char)*strlen(getparam)+1);
 	strcpy(req->getmethod,getparam);
       }
     }
@@ -423,19 +427,27 @@ void  *processRequest(void *argument){
     logger(FATAL,"pointeur de fonction thread repetoire de travail non defini \n");
     exit(EXIT_FAILURE); 
   }
+
   while(1){
-    struct sockaddr_in addr;
-    int len = sizeof(addr);
-    //printListFile(list);
-    int listend = arg->socketFd;
-    //int con = accept(listend, &addr, &len);
-    int con = accept(listend, NULL, NULL);
-    //printf("Connection: %s:%d\n",inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));	
-    char * header = getMessage(con);
     t_httpResponse *httpresponse=NULL;
     t_httpRequest *httpreq=NULL;
     char responseHeader[MAX_BUFFER];
     char *content = NULL;
+    struct sockaddr_in addr;
+    int len = sizeof(addr);
+    int listend = arg->socketFd;
+    
+   // int con = accept(listend, &addr, &len);
+    int con = accept(listend, NULL, NULL);
+    //printf("Connection: %s:%d\n",inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+    SSL *ssl;
+    if(arg->sslContext != NULL){
+       ssl = SSL_new(arg->sslContext);
+       SSL_set_fd(ssl, con);
+    }
+   
+     
+    char * header = getMessage(con);
     char *filename = getFileName(arg->wwwDirectory,header);
     if(filename != NULL){
       httpreq = getTypeRequest(filename);
@@ -467,10 +479,13 @@ void  *processRequest(void *argument){
 
 
 int main(int argc, char *argv[]){
-  int listenfd = 0, connfd = 0 ,i = 0,pid;
+  SSL_CTX *sslctx = NULL;
+  int listenfd = 0,port=0,connfd = 0 ,i = 0,pid;
   struct sockaddr_in serv_addr; 
+  struct sockaddr_in serv_addrHttps; 
   char sendBuff[1025];
   pthread_t threadLogger;
+  t_argumentThread *argument = NULL;
   initlogger();  
   t_config *config= readconfig("server.conf");
   if(config == NULL){
@@ -482,33 +497,59 @@ int main(int argc, char *argv[]){
      exit(-1);
    }
     
-    
    if(pthread_create(&threadLogger, NULL, &loggMessageTofile, config->filelog) == -1) {
      fprintf(stderr, "Echec de la creation thread Logger -> allocation memoire impossible\n");
      exit(EXIT_FAILURE);
    }
+   
+   // HTTPS activer dans la configuration ouverture socket https
+   if(config->activeTls){
+     //initialisation context
+     sslctx = InitServerCTX();
+     if(config->certFile == NULL){
+        logger(FATAL," Echec lors de l'initialisation du service SSL le certificat n'est pas trouvé\n");
+	fprintf(stderr, "Echec lors de l'initialisation du service SSL le certificat n'est pas trouvé \n");
+	exit(EXIT_FAILURE);
+     }
+     if(config->privateKey == NULL){
+        logger(FATAL," Echec lors de l'initialisation du service SSL le clé priveé n'est pas trouvé\n");
+	fprintf(stderr, "Echec lors de l'initialisation du service SSL le clé priveé n'est pas trouvée \n");
+	exit(EXIT_FAILURE);
+     }
+     
+     //chargement cle privee
+     chargementCertificats(sslctx, config->certFile, config->privateKey);
+   }
 
+   port=config->port;
    listenfd = socket(AF_INET, SOCK_STREAM, 0);
    memset(&serv_addr, '0', sizeof(serv_addr));
    memset(sendBuff, '0', sizeof(sendBuff)); 
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-   serv_addr.sin_port = htons(config->port); 
+   port=config->port;
+   if(config->activeTls){
+     port=config->tls_port;
+   }
+   serv_addr.sin_port = htons(port); 
    bind(listenfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)); 
-   listen(listenfd, 10); 
-   t_argumentThread *argument = (t_argumentThread *) malloc(sizeof(t_argumentThread));
+   listen(listenfd, 10);
+   
+   
+   argument = (t_argumentThread *) malloc(sizeof(t_argumentThread));
    if(argument == NULL){
       fprintf(stderr, "Echec de la creation argument thread -> allocation memoire impossible\n");
       logger(FATAL,"Echec de la creation argument thread -> allocation memoire impossible\n");
       exit(-1);
    }
+  
    argument->poolId=getpid();
    argument->socketFd=listenfd;
+   argument->sslContext=sslctx;
    if(config->wwwDirectory ==NULL){
       logger(FATAL,"repertoire source non configuré dans le fichier de configuration\n");
       exit(-1);
    }
-	  
    argument->wwwDirectory=config->wwwDirectory;
    for(i=0;i<config->maxProcess;i++){
       //prefork mode     
@@ -527,7 +568,7 @@ int main(int argc, char *argv[]){
 	  }
 	} 
     }
-	  
+
     signal(SIGINT, signalCallback);
     signal(SIGKILL, signalCallback);
     signal(SIGSTOP, signalCallback);
